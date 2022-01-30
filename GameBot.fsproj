@@ -13,6 +13,11 @@
 
   <ItemGroup>
     <Compile Include="Client.fs" />
+    <Compile Include="Instance.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data" Version="4.1.1" />
   </ItemGroup>
 
 </Project>
