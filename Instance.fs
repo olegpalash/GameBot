@@ -40,6 +40,8 @@ type Response = {
     Document: HtmlDocument option
 }
 
+type Logger = string -> unit
+
 type State = {
     Task:     Task
     SubTask:  SubTaskID
@@ -48,11 +50,9 @@ type State = {
 
 and Task = {
     Id:              TaskID
-    Fun:             State -> Action
+    Fun:             State * Logger -> Action
     mutable Enabled: bool
 }
-
-type Logger = string -> unit
 
 type Instance(client: Client, logger: Logger, defaultTask: Task, defaultAddr: string, initTask: Task) =
     let mutable state = {Task = initTask; SubTask = SubTaskID 0; Response = None}
@@ -142,7 +142,7 @@ type Instance(client: Client, logger: Logger, defaultTask: Task, defaultAddr: st
             handleError ()
 
     member this.Run () = 
-        let action = state.Task.Fun state
+        let action = state.Task.Fun (state, log)
         log (action.ToString ())
         doAction action
 
