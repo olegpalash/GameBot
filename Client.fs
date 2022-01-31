@@ -8,7 +8,7 @@ open System.Collections.Generic
 
 type Client(address: string) = 
     let cookies = new CookieContainer()
-    let handler = new SocketsHttpHandler()
+    let handler = new HttpClientHandler()
     do handler.CookieContainer <- cookies
 
     let client = new HttpClient(handler)
