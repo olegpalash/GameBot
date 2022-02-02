@@ -2,13 +2,16 @@ module GameBot.Interface
 
 open FSharp.Data
 
-let findAllLinks state = 
+let selectElements state tag = 
     match state.Response with
     | Some response ->
         match response.Document with
-        | Some doc -> doc.CssSelect "a"
+        | Some doc -> doc.CssSelect tag
         | None     -> []
-    | None     -> []
+    | None -> []
+
+let findAllLinks state = 
+    selectElements state "a"
 
 let findLinkByText (text : string) (lst : HtmlNode list) =
     lst
