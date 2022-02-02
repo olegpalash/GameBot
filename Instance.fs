@@ -8,9 +8,19 @@ open System.Net.Http
 
 open FSharp.Data
 
-type TaskID = TaskID of string
+type TaskID =
+    | TaskID of string
 
-type SubTaskID = SubTaskID of int
+    override this.ToString () = 
+        match this with
+        | TaskID str -> str
+
+type SubTaskID =
+    | SubTaskID of int
+
+    override this.ToString () =
+        match this with
+        | SubTaskID value -> value.ToString ()
 
 type GetRecord = {
     Address: string
@@ -33,6 +43,16 @@ type Action =
     | PushTask   of TaskID
     | PullTask
     | Error
+
+    override this.ToString () = 
+        match this with
+        | Get data        -> $"Get Addr='{data.Address}' Delay={data.Delay} SubTask={data.SubTask}"
+        | Post data       -> $"Post Addr='{data.Address}' Delay={data.Delay} SubTask={data.SubTask} Data={data.Data}"
+        | SetSubTask sub  -> $"SetSubTask {sub}"
+        | SetTask taskid  -> $"SetTask {taskid}"
+        | PushTask taskid -> $"PushTask {taskid}"
+        | PullTask        -> "PullTask"
+        | Error           -> "Error"
 
 type Response = {
     Status:   HttpStatusCode
