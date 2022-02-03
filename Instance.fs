@@ -22,22 +22,9 @@ type SubTaskID =
         match this with
         | SubTaskID value -> value.ToString ()
 
-type GetRecord = {
-    Address: string
-    Delay:   int
-    SubTask: SubTaskID
-}
-
-type PostRecord = {
-    Address: string
-    Delay:   int
-    SubTask: SubTaskID
-    Data:    Map<string, string>
-}
-
 type Action = 
-    | Get        of GetRecord
-    | Post       of PostRecord
+    | Get        of address : string * sub :  SubTaskID * delay : int
+    | Post       of address : string * sub :  SubTaskID * delay : int * data : Map<string, string>
     | SetSubTask of SubTaskID
     | SetTask    of TaskID
     | PushTask   of TaskID
@@ -46,8 +33,8 @@ type Action =
 
     override this.ToString () = 
         match this with
-        | Get data        -> $"Get Addr='{data.Address}' Delay={data.Delay} SubTask={data.SubTask}"
-        | Post data       -> $"Post Addr='{data.Address}' Delay={data.Delay} SubTask={data.SubTask} Data={data.Data}"
+        | Get(addr, sub, delay)        -> $"Get Addr='{addr}' SubTask={sub} Delay={delay}"
+        | Post(addr, sub, delay, data) -> $"Post Addr='{addr}' SubTask={sub} Delay={delay} Data={data}"
         | SetSubTask sub  -> $"SetSubTask {sub}"
         | SetTask taskid  -> $"SetTask {taskid}"
         | PushTask taskid -> $"PushTask {taskid}"
@@ -101,17 +88,17 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
         state <- {Task = defaultTask; SubTask = SubTaskID 0; Response = conv response}
         saved <- []
 
-    let doGet (data : GetRecord) = 
-        Thread.Sleep data.Delay
+    let doGet addr sub (delay : int)  = 
+        Thread.Sleep delay
 
-        let response = client.Get data.Address
-        state <- {state with SubTask = data.SubTask; Response = conv response}
+        let response = client.Get addr
+        state <- {state with SubTask = sub; Response = conv response}
 
-    let doPost (data : PostRecord) = 
-        Thread.Sleep data.Delay
+    let doPost addr sub (delay : int)  data = 
+        Thread.Sleep delay
 
-        let response = client.Post(data.Address, data.Data)
-        state <- {state with SubTask = data.SubTask; Response = conv response}
+        let response = client.Post(addr, data)
+        state <- {state with SubTask = sub; Response = conv response}
 
     let doSetTask taskid = 
         match Map.tryFind taskid tasks with
@@ -145,10 +132,10 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
 
     let doAction action = 
         match action with
-        | Get data -> 
-            doGet data
-        | Post data ->
-            doPost data
+        | Get(addr, sub, delay) -> 
+            doGet addr sub delay
+        | Post(addr, sub, delay, data) ->
+            doPost addr sub delay data
         | SetSubTask subtask ->
             state <- {state with SubTask = subtask}
         | SetTask taskid ->

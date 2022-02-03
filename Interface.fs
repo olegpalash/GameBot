@@ -21,7 +21,7 @@ let followLink logger sub delay (node : HtmlNode) =
     logger $"-> {node.InnerText()}"
     
     let href = node.Attribute("href").Value()
-    Get {Address = href; SubTask = sub; Delay = delay}
+    Get(href, sub, delay)
 
 let rec matchLinks state logger mapping = 
     let links = findAllLinks state
