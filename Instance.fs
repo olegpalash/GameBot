@@ -30,6 +30,7 @@ type Action =
     | PushTask   of TaskID
     | PullTask
     | Error
+    | Stop
 
     override this.ToString () = 
         match this with
@@ -40,6 +41,7 @@ type Action =
         | PushTask taskid -> $"PushTask {taskid}"
         | PullTask        -> "PullTask"
         | Error           -> "Error"
+        | Stop            -> "Stop"
 
 type Response = {
     Status:   HttpStatusCode
@@ -65,6 +67,7 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
     let mutable state = {Task = initTask; SubTask = SubTaskID 0; Response = None}
     let mutable saved : State<'TData> list = []
     let mutable tasks : Map<TaskID, Task<'TData>> = Map []
+    let mutable isRun = true
 
     let conv (response : HttpResponseMessage) = 
         let status = response.StatusCode
@@ -147,13 +150,18 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
             doRestoreState ()
         | Error ->
             handleError ()
+        | Stop ->
+            isRun <- false
 
     member this.Run () = 
         let action = state.Task.Fun (state, log)
         log (action.ToString ())
         doAction action
 
-        this.Run ()
+        if isRun then
+            this.Run ()
+        else
+            ()
 
     member this.RegisterTask taskid task =
         tasks <- tasks |> Map.add taskid task
