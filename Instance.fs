@@ -62,22 +62,22 @@ type Response = {
 
 type Logger = string -> unit
 
-type State = {
-    Task:     Task
+type State<'TData> = {
+    Task:     Task<'TData>
     SubTask:  SubTaskID
     Response: Response option
 }
 
-and Task = {
+and Task<'TData> = {
     Id:              TaskID
-    Fun:             State * Logger -> Action
-    mutable Enabled: bool
+    Fun:             State<'TData> * Logger -> Action
+    Data:            'TData
 }
 
-type Instance(client: Client, logger: Logger, defaultTask: Task, defaultAddr: string, initTask: Task) =
+type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>, defaultAddr: string, initTask: Task<'TData>) =
     let mutable state = {Task = initTask; SubTask = SubTaskID 0; Response = None}
-    let mutable saved : State list = []
-    let mutable tasks : Map<TaskID, Task> = Map []
+    let mutable saved : State<'TData> list = []
+    let mutable tasks : Map<TaskID, Task<'TData>> = Map []
 
     let conv (response : HttpResponseMessage) = 
         let status = response.StatusCode
