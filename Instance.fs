@@ -157,3 +157,5 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
 
     member this.RegisterTask taskid task =
         tasks <- tasks |> Map.add taskid task
+
+    member this.Tasks = tasks
