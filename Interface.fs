@@ -42,3 +42,10 @@ let matchLink state logger text sub delay =
         followLink logger sub delay node
     | None ->
         Error
+
+let getInnerText state = 
+    state.Response
+    |> Option.bind (fun x -> x.Document)
+    |> Option.bind HtmlDocument.tryGetBody
+    |> Option.map HtmlNode.innerText
+    |> Option.defaultValue ""
