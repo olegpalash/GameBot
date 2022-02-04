@@ -18,6 +18,11 @@ let findLinkByText (text : string) (lst : HtmlNode list) =
     lst
     |> List.tryFind (fun x -> x.InnerText().Contains(text))
 
+let selectLinkByText text state = 
+    state
+    |> selectElements "a"
+    |> findLinkByText text
+
 let followLink logger sub delay (node : HtmlNode) =
     logger $"-> {node.InnerText()}"
     
