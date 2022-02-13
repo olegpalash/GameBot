@@ -10,6 +10,14 @@ let selectElements tag state =
         | None     -> []
     | None -> []
 
+let selectElement tag state = 
+    state.Response
+    |> Option.bind (fun resp -> resp.Document)
+    |> Option.bind (fun doc ->
+        match doc.CssSelect with
+        | head :: _ -> Some head
+        | []        -> None)
+
 let findAllLinks state = 
     state
     |> selectElements "a"
