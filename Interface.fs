@@ -14,7 +14,7 @@ let selectElement tag state =
     state.Response
     |> Option.bind (fun resp -> resp.Document)
     |> Option.bind (fun doc ->
-        match doc.CssSelect with
+        match doc.CssSelect tag with
         | head :: _ -> Some head
         | []        -> None)
 
