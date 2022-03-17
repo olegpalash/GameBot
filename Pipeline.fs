@@ -38,7 +38,7 @@ let tryLink text sub delay pstate =
 let elseRun f pstate = 
     match pstate.Action with
     | Some action -> action
-    | None -> f ()
+    | None -> f pstate
 
 let elseReturn value pstate = 
     match pstate.Action with
