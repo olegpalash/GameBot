@@ -57,6 +57,11 @@ let matchLink state logger text sub delay =
     | None ->
         Error
 
+let tryGetBody state = 
+    state.Response
+    |> Option.bind (fun x -> x.Document)
+    |> Option.bind HtmlDocument.tryGetBody
+
 let getInnerText state = 
     state.Response
     |> Option.bind (fun x -> x.Document)
