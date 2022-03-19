@@ -82,7 +82,7 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
         let now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         let (TaskID task) = state.Task.Id
         let (SubTaskID subtask) = state.SubTask
-        logger $"{now}\t{task}\t{subtask}\t{str}"
+        logger $"{now} {task,8} {subtask,2} {str}"
 
     let handleInternalError str = 
         log $"An internal error occurred: {str}"
