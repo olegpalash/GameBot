@@ -35,6 +35,17 @@ let tryLink text sub delay pstate =
         | None ->
             pstate
 
+let tryCondFun cond f pstate =  
+    match pstate.Action with
+    | Some action ->
+        pstate
+    | None ->
+        if cond pstate then
+            let action = f pstate
+            {pstate with Action = Some action}
+        else
+            pstate
+
 let elseRun f pstate = 
     match pstate.Action with
     | Some action -> action
