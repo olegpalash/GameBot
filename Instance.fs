@@ -60,6 +60,9 @@ type State<'TData> = {
 and Task<'TData> = {
     Id:              TaskID
     Fun:             State<'TData> * Logger -> Action
+    mutable Enabled: bool    
+    mutable Time:    DateTime option
+    Priority:        int
     Data:            'TData
 }
 
