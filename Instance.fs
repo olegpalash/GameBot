@@ -27,8 +27,6 @@ type Action =
     | Post       of address : string * sub :  SubTaskID * delay : int * data : Map<string, string>
     | SetSubTask of SubTaskID
     | SetTask    of TaskID
-    | PushTask   of TaskID
-    | PullTask
     | Error
     | Stop
 
@@ -38,8 +36,6 @@ type Action =
         | Post(addr, sub, delay, data) -> $"Post Addr='{addr}' SubTask={sub} Delay={delay} Data={data}"
         | SetSubTask sub  -> $"SetSubTask {sub}"
         | SetTask taskid  -> $"SetTask {taskid}"
-        | PushTask taskid -> $"PushTask {taskid}"
-        | PullTask        -> "PullTask"
         | Error           -> "Error"
         | Stop            -> "Stop"
 
@@ -68,7 +64,6 @@ and Task<'TData> = {
 
 type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>, defaultAddr: string, initTask: Task<'TData>) =
     let mutable state = {Task = initTask; SubTask = SubTaskID 0; Response = None}
-    let mutable saved : State<'TData> list = []
     let mutable tasks : Map<TaskID, Task<'TData>> = Map []
     let mutable isRun = true
 
@@ -92,7 +87,6 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
 
         let response = client.Get defaultAddr
         state <- {Task = defaultTask; SubTask = SubTaskID 0; Response = conv response}
-        saved <- []
 
     let doGet addr sub (delay : int)  = 
         Thread.Sleep delay
@@ -113,14 +107,6 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
         | None ->
             handleInternalError $"Invalid task id: {taskid}"
 
-    let doRestoreState () = 
-        match saved with
-        | head :: tail ->
-            state <- head
-            saved <- tail
-        | [] -> 
-            handleInternalError "No saved state"
-
     let handleError () = 
         let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
         let path = $"errors/{now}.html"
@@ -134,7 +120,6 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
 
         let response = client.Get defaultAddr
         state <- {Task = defaultTask; SubTask = SubTaskID 0; Response = conv response}
-        saved <- []
 
     let doAction action = 
         match action with
@@ -146,11 +131,6 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
             state <- {state with SubTask = subtask}
         | SetTask taskid ->
             doSetTask taskid
-        | PushTask taskid ->
-            saved <- state :: saved
-            doSetTask taskid
-        | PullTask ->
-            doRestoreState ()
         | Error ->
             handleError ()
         | Stop ->
