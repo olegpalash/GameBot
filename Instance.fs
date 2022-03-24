@@ -56,24 +56,26 @@ type State<'TData> = {
 }
 
 and Task<'TData> = {
-    Id:              TaskID
-    Fun:             State<'TData> * Logger -> Action
-    mutable Enabled: bool    
-    mutable Time:    DateTime option
-    Priority:        int
-    Data:            'TData
+    Id:       TaskID
+    Fun:      State<'TData> * Logger -> Action
+    Enabled:  bool    
+    Time:     DateTime option
+    Priority: int
+    Data:     'TData
 }
 
 type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task<'TData> list) =
     let tasks =
         tasksList
-        |> List.map (fun t -> (t.Id, t))
+        |> List.map (fun t -> (t.Id, ref t))
         |> Map    
 
-    let defaultTask = tasks |> Map.find defaultTaskId
+    let defaultTaskRef = tasks |> Map.find defaultTaskId
+
+    let mutable currTaskRef = tasks |> Map.find initTaskId
 
     let mutable state = {
-        Task     = tasks |> Map.find initTaskId
+        Task     = !currTaskRef
         SubTask  = SubTaskID 0
         Response = None }
 
@@ -98,7 +100,8 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
         log $"An internal error occurred: {str}"
 
         let response = client.Get defaultAddr
-        state <- {Task = defaultTask; SubTask = SubTaskID 0; Response = conv response}
+        currTaskRef <- defaultTaskRef
+        state <- {Task = !defaultTaskRef; SubTask = SubTaskID 0; Response = conv response}
 
     let doGet addr sub (delay : int)  = 
         Thread.Sleep delay
@@ -115,7 +118,8 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
     let doSetTask taskid = 
         match Map.tryFind taskid tasks with
         | Some task ->
-            state <- {state with Task = task; SubTask = SubTaskID 0}
+            currTaskRef <- task
+            state <- {state with Task = !task; SubTask = SubTaskID 0}
         | None ->
             handleInternalError $"Invalid task id: {taskid}"
 
@@ -131,7 +135,8 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
             log $"An error occurred, no response page"
 
         let response = client.Get defaultAddr
-        state <- {Task = defaultTask; SubTask = SubTaskID 0; Response = conv response}
+        currTaskRef <- defaultTaskRef
+        state <- {Task = !defaultTaskRef; SubTask = SubTaskID 0; Response = conv response}
 
     let doAction action = 
         match action with
@@ -144,7 +149,7 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
         | SetTask taskid ->
             doSetTask taskid
         | SetTime(time, sub) ->
-            state.Task.Time <- time
+            currTaskRef := {!currTaskRef with Time = time}
             state <- {state with SubTask = sub}
         | Error ->
             handleError ()
