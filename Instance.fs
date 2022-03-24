@@ -27,7 +27,7 @@ type Action =
     | Post       of address : string * sub :  SubTaskID * delay : int * data : Map<string, string>
     | SetSubTask of SubTaskID
     | SetTask    of TaskID
-    | SetTime    of DateTime option * SubTaskID
+    | SetTime    of DateTime option * TaskID
     | Error
     | Stop
 
@@ -37,7 +37,7 @@ type Action =
         | Post(addr, sub, delay, data) -> $"Post Addr='{addr}' SubTask={sub} Delay={delay} Data={data}"
         | SetSubTask sub               -> $"SetSubTask {sub}"
         | SetTask taskid               -> $"SetTask {taskid}"
-        | SetTime(time, sub)           -> $"SetTime Time={time} SubTask={sub}"
+        | SetTime(time, taskid)        -> $"SetTime Time={time} Task={taskid}"
         | Error                        -> "Error"
         | Stop                         -> "Stop"
 
@@ -148,9 +148,9 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
             state <- {state with SubTask = subtask}
         | SetTask taskid ->
             doSetTask taskid
-        | SetTime(time, sub) ->
+        | SetTime(time, taskid) ->
             currTaskRef := {!currTaskRef with Time = time}
-            state <- {state with SubTask = sub}
+            doSetTask taskid
         | Error ->
             handleError ()
         | Stop ->
