@@ -27,6 +27,7 @@ type Action =
     | Post       of address : string * sub :  SubTaskID * delay : int * data : Map<string, string>
     | SetSubTask of SubTaskID
     | SetTask    of TaskID
+    | SetTime    of DateTime option * SubTaskID
     | Error
     | Stop
 
@@ -34,10 +35,11 @@ type Action =
         match this with
         | Get(addr, sub, delay)        -> $"Get Addr='{addr}' SubTask={sub} Delay={delay}"
         | Post(addr, sub, delay, data) -> $"Post Addr='{addr}' SubTask={sub} Delay={delay} Data={data}"
-        | SetSubTask sub  -> $"SetSubTask {sub}"
-        | SetTask taskid  -> $"SetTask {taskid}"
-        | Error           -> "Error"
-        | Stop            -> "Stop"
+        | SetSubTask sub               -> $"SetSubTask {sub}"
+        | SetTask taskid               -> $"SetTask {taskid}"
+        | SetTime(time, sub)           -> $"SetTime Time={time} SubTask={sub}"
+        | Error                        -> "Error"
+        | Stop                         -> "Stop"
 
 type Response = {
     Status:   HttpStatusCode
@@ -135,6 +137,9 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>,
             state <- {state with SubTask = subtask}
         | SetTask taskid ->
             doSetTask taskid
+        | SetTime(time, sub) ->
+            state.Task.Time <- time
+            state <- {state with SubTask = sub}
         | Error ->
             handleError ()
         | Stop ->
