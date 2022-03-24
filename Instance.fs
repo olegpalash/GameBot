@@ -64,14 +64,20 @@ and Task<'TData> = {
     Data:            'TData
 }
 
-type Instance<'TData>(client: Client, logger: Logger, defaultTask: Task<'TData>, defaultAddr: string, initTask: Task<'TData>, tasksList: Task<'TData> list) =
-    let mutable state = {Task = initTask; SubTask = SubTaskID 0; Response = None}
-    let mutable isRun = true
-    
+type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task<'TData> list) =
     let tasks =
         tasksList
         |> List.map (fun t -> (t.Id, t))
         |> Map    
+
+    let defaultTask = tasks |> Map.find defaultTaskId
+
+    let mutable state = {
+        Task     = tasks |> Map.find initTaskId
+        SubTask  = SubTaskID 0
+        Response = None }
+
+    let mutable isRun = true
 
     let conv (response : HttpResponseMessage) = 
         let status = response.StatusCode

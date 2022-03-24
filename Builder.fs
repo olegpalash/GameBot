@@ -44,7 +44,5 @@ let buildInstance b =
     let logger  = Option.get b.Logger
     let dTaskId = Option.get b.DefaultTask
     let iTaskId = Option.get b.InitTask
-    let dTask   = List.find (fun x -> x.Id = dTaskId) b.TasksList
-    let iTask   = List.find (fun x -> x.Id = iTaskId) b.TasksList
 
-    Instance(client, logger, dTask, b.DefaultAddress, iTask, b.TasksList)
+    Instance(client, logger, dTaskId, b.DefaultAddress, iTaskId, b.TasksList)
