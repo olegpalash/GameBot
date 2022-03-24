@@ -182,4 +182,3 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
 
         tasks
         |> Map.fold folder None
-        |> Option.map (fun (task, time) -> (task, time < DateTime.Now))
