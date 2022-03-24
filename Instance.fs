@@ -166,4 +166,20 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
         else
             ()
 
-    member this.Tasks = tasks
+    member this.GetNextTask () = 
+        let folder st _ taskRef = 
+            let task = !taskRef
+            if task.Enabled && task.Priority > state.Task.Priority then
+                match st, task.Time with
+                | Some(_, stime), Some(time) when time < stime ->
+                    Some(task, time)
+                | None,           Some(time) ->
+                    Some(task, time)
+                | _ ->
+                    st
+            else
+                st
+
+        tasks
+        |> Map.fold folder None
+        |> Option.map (fun (task, time) -> (task, time < DateTime.Now))
