@@ -46,6 +46,18 @@ let tryCondFun cond f pstate =
         else
             pstate
 
+let tryTextFun text f pstate = 
+    match pstate.Action with
+    | Some action ->
+        pstate
+    | None ->
+        let content = getInnerText pstate.State
+        if content.Contains(text) then
+            let action = f pstate
+            {pstate with Action = Some action}
+        else
+            pstate
+
 let elseRun f pstate = 
     match pstate.Action with
     | Some action -> action
