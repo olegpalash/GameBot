@@ -40,7 +40,7 @@ let tryCondFun cond f pstate =
     | Some action ->
         pstate
     | None ->
-        if cond pstate then
+        if cond then
             let action = f pstate
             {pstate with Action = Some action}
         else
