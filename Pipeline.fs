@@ -59,6 +59,19 @@ let tryLinks sub delay texts pstate =
         | None ->
             pstate
 
+let tryLinkFun text f pstate = 
+    match pstate.Action with
+    | Some action ->
+        pstate
+    | None ->
+        let link = selectLinkByText text pstate.State
+        match link with
+        | Some node ->
+            let action = f pstate node
+            {pstate with Action = Some action}
+        | None ->
+            pstate
+
 let tryCondFun cond f pstate =  
     match pstate.Action with
     | Some action ->
