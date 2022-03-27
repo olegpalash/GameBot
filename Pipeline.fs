@@ -35,6 +35,30 @@ let tryLink text sub delay pstate =
         | None ->
             pstate
 
+let tryLinks sub delay texts pstate = 
+    let rec findLink texts links =
+        match texts with 
+        | head :: tail ->
+            match (findLinkByText head links) with
+            | Some node ->
+                Some node
+            | None ->
+                findLink tail links
+        | [] ->
+            None
+
+    match pstate.Action with
+    | Some action ->
+        pstate
+    | None ->
+        let link = findAllLinks pstate.State |> findLink texts
+        match link with
+        | Some node ->
+            let action = followLink pstate.Logger sub delay node
+            { pstate with Action = Some action }
+        | None ->
+            pstate
+
 let tryCondFun cond f pstate =  
     match pstate.Action with
     | Some action ->
