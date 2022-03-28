@@ -167,13 +167,16 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
             ()
 
     member this.GetNextTask () = 
+        let now = DateTime.Now
         let folder st _ taskRef = 
             let task = !taskRef
             if task.Enabled && task.Priority > state.Task.Priority then
                 match st, task.Time with
-                | Some(_, stime), Some(time) when time < stime ->
+                | Some(_, stime), Some(time) when stime > now && time < stime ->
                     Some(task, time)
-                | None,           Some(time) ->
+                | Some(stask, _), Some(time) when task.Priority > stask.Priority ->
+                    Some(task, time)
+                | None, Some(time) ->
                     Some(task, time)
                 | _ ->
                     st
