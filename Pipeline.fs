@@ -18,7 +18,7 @@ let tryFun f pstate =
     | None ->
         match f pstate with
         | Some action ->
-            {pstate with Action = action}
+            {pstate with Action = Some action}
         | None ->
             pstate
 
