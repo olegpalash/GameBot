@@ -168,16 +168,27 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
 
     member this.GetNextTask () = 
         let now = DateTime.Now
+
+        let mapping (time : DateTime) (pri : int) = 
+            let ticks = time.Ticks - now.Ticks
+            if ticks > 0L then
+                ticks
+            else
+                -(int64 pri)
+
         let folder st _ taskRef = 
             let task = !taskRef
             if task.Enabled && task.Priority > state.Task.Priority then
                 match st, task.Time with
-                | Some(_, stime), Some(time) when stime > now && time < stime ->
-                    Some(task, time)
-                | Some(stask, _), Some(time) when task.Priority > stask.Priority ->
-                    Some(task, time)
+                | Some(_, _, sval), Some(time) ->
+                    let value = mapping time (task.Priority)
+                    if value < sval then
+                        Some(task, time, value)
+                    else
+                        st
                 | None, Some(time) ->
-                    Some(task, time)
+                    let value = mapping time (task.Priority)
+                    Some(task, time, value)
                 | _ ->
                     st
             else
@@ -185,3 +196,4 @@ type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, def
 
         tasks
         |> Map.fold folder None
+        |> Option.map (fun (task, time, _) -> task, time)
