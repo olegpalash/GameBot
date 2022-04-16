@@ -2,13 +2,13 @@ module GameBot.Builder
 
 open GameBot
 
-type Builder<'TData> = {
+type Builder = {
     Client:         Client option
     Logger:         Logger option
     DefaultTask:    TaskID option
     DefaultAddress: string
     InitTask:       TaskID option
-    TasksList:      Task<'TData> list
+    TasksList:      Task list
 }
 
 let initBuilder = 

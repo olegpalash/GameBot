@@ -2,8 +2,8 @@ module GameBot.Pipeline
 
 open GameBot.Interface
 
-type PipeState<'TData> = {
-    State:  State<'TData>
+type PipeState = {
+    State:  State
     Logger: Logger
     Action: Action option
 }

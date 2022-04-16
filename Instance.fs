@@ -49,22 +49,22 @@ type Response = {
 
 type Logger = string -> unit
 
-type State<'TData> = {
-    Task:     Task<'TData>
+type State = {
+    Task:     Task
     SubTask:  SubTaskID
     Response: Response option
 }
 
-and Task<'TData> = {
+and Task = {
     Id:       TaskID
-    Fun:      State<'TData> * Logger -> Action
+    Fun:      State * Logger -> Action
     Enabled:  bool    
     Time:     DateTime option
     Priority: int
-    Data:     'TData
+    Data:     obj
 }
 
-type Instance<'TData>(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task<'TData> list) =
+type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task list) =
     let tasks =
         tasksList
         |> List.map (fun t -> (t.Id, ref t))
