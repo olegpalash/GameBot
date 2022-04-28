@@ -3,13 +3,12 @@ module GameBot.Pipeline
 open GameBot.Interface
 
 type PipeState = {
-    State:  State
-    Logger: Logger
+    State:  IState
     Action: Action option
 }
 
-let initPipe state logger = 
-    {State = state; Logger = logger; Action = None}
+let initPipe state = 
+    {State = state; Action = None}
 
 let tryFun f pstate = 
     match pstate.Action with
@@ -30,7 +29,7 @@ let tryLink text sub delay pstate =
         let link = selectLinkByText text pstate.State
         match link with
         | Some node ->
-            let action = followLink pstate.Logger sub delay node
+            let action = followLink pstate.State.Logger sub delay node
             {pstate with Action = Some action}
         | None ->
             pstate
@@ -54,7 +53,7 @@ let tryLinks sub delay texts pstate =
         let link = findAllLinks pstate.State |> findLink texts
         match link with
         | Some node ->
-            let action = followLink pstate.Logger sub delay node
+            let action = followLink pstate.State.Logger sub delay node
             { pstate with Action = Some action }
         | None ->
             pstate

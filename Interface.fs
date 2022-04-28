@@ -2,7 +2,7 @@ module GameBot.Interface
 
 open FSharp.Data
 
-let selectElements tag state = 
+let selectElements (tag : string) (state : IState) = 
     match state.Response with
     | Some response ->
         match response.Document with
@@ -10,7 +10,7 @@ let selectElements tag state =
         | None     -> []
     | None -> []
 
-let selectElement tag state = 
+let selectElement (tag : string) (state : IState) = 
     state.Response
     |> Option.bind (fun resp -> resp.Document)
     |> Option.bind (fun doc ->
@@ -57,12 +57,12 @@ let matchLink state logger text sub delay =
     | None ->
         Error
 
-let tryGetBody state = 
+let tryGetBody (state : IState) = 
     state.Response
     |> Option.bind (fun x -> x.Document)
     |> Option.bind HtmlDocument.tryGetBody
 
-let getInnerText state = 
+let getInnerText (state : IState) = 
     state.Response
     |> Option.bind (fun x -> x.Document)
     |> Option.bind HtmlDocument.tryGetBody

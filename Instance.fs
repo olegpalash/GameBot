@@ -49,20 +49,23 @@ type Response = {
 
 type Logger = string -> unit
 
-type State = {
-    Task:     Task
-    SubTask:  SubTaskID
-    Response: Response option
-}
-
-and Task = {
+type Task = {
     Id:       TaskID
-    Fun:      State * Logger -> Action
+    Fun:      IState -> Action
     Enabled:  bool    
     Time:     DateTime option
     Priority: int
     Data:     obj
 }
+
+and IState = 
+    abstract Task     : Task
+    abstract SubTask  : SubTaskID
+    abstract Response : Response option
+    abstract Logger   : Logger
+
+    abstract GetTaskById : TaskID -> Task option
+    abstract GetNextTask : unit   -> Task option
 
 type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task list) =
     let tasks =
@@ -72,13 +75,9 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
 
     let defaultTaskRef = tasks |> Map.find defaultTaskId
 
-    let mutable currTaskRef = tasks |> Map.find initTaskId
-
-    let mutable state = {
-        Task     = !currTaskRef
-        SubTask  = SubTaskID 0
-        Response = None }
-
+    let mutable currTaskRef  = tasks |> Map.find initTaskId
+    let mutable currSubTask  = SubTaskID 0
+    let mutable currResponse = None
     let mutable isRun = true
 
     let conv (response : HttpResponseMessage) = 
@@ -92,34 +91,37 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
 
     let log str = 
         let now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-        let (TaskID task) = state.Task.Id
-        let (SubTaskID subtask) = state.SubTask
+        let (TaskID task) = currTaskRef.Value.Id
+        let (SubTaskID subtask) = currSubTask
         logger $"{now} {task,8} {subtask,2} {str}"
 
     let handleInternalError str = 
         log $"An internal error occurred: {str}"
 
         let response = client.Get defaultAddr
-        currTaskRef <- defaultTaskRef
-        state <- {Task = !defaultTaskRef; SubTask = SubTaskID 0; Response = conv response}
+        currTaskRef  <- defaultTaskRef
+        currSubTask  <- SubTaskID 0
+        currResponse <- conv response
 
     let doGet addr sub (delay : int)  = 
         Thread.Sleep delay
 
         let response = client.Get addr
-        state <- {state with SubTask = sub; Response = conv response}
+        currSubTask  <- sub
+        currResponse <- conv response
 
     let doPost addr sub (delay : int)  data = 
         Thread.Sleep delay
 
         let response = client.Post(addr, data)
-        state <- {state with SubTask = sub; Response = conv response}
+        currSubTask  <- sub
+        currResponse <- conv response
 
     let doSetTask taskid = 
         match Map.tryFind taskid tasks with
         | Some task ->
             currTaskRef <- task
-            state <- {state with Task = !task; SubTask = SubTaskID 0}
+            currSubTask <- SubTaskID 0
         | None ->
             handleInternalError $"Invalid task id: {taskid}"
 
@@ -127,7 +129,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
         let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
         let path = $"errors/{now}.html"
 
-        match state.Response with
+        match currResponse with
         | Some response ->
             File.WriteAllText (path, response.Content)
             log $"An error occurred, page saved to {path}"
@@ -135,8 +137,9 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
             log $"An error occurred, no response page"
 
         let response = client.Get defaultAddr
-        currTaskRef <- defaultTaskRef
-        state <- {Task = !defaultTaskRef; SubTask = SubTaskID 0; Response = conv response}
+        currTaskRef  <- defaultTaskRef
+        currSubTask  <- SubTaskID 0
+        currResponse <- conv response
 
     let doAction action = 
         match action with
@@ -145,7 +148,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
         | Post(addr, sub, delay, data) ->
             doPost addr sub delay data
         | SetSubTask subtask ->
-            state <- {state with SubTask = subtask}
+            currSubTask <- subtask
         | SetTask taskid ->
             doSetTask taskid
         | SetTime(time, taskid) ->
@@ -156,17 +159,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
         | Stop ->
             isRun <- false
 
-    member this.Run () = 
-        let action = state.Task.Fun (state, log)
-        log (action.ToString ())
-        doAction action
-
-        if isRun then
-            this.Run ()
-        else
-            ()
-
-    member this.GetNextTask () = 
+    let getNextTask () = 
         let now = DateTime.Now
 
         let mapping (time : DateTime) (pri : int) = 
@@ -178,7 +171,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
 
         let folder st _ taskRef = 
             let task = !taskRef
-            if task.Enabled && task.Priority > state.Task.Priority then
+            if task.Enabled && task.Priority > currTaskRef.Value.Priority then
                 match st, task.Time with
                 | Some(_, _, sval), Some(time) ->
                     let value = mapping time (task.Priority)
@@ -196,4 +189,29 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
 
         tasks
         |> Map.fold folder None
-        |> Option.map (fun (task, time, _) -> task, time)
+        |> Option.map (fun (task, _, _) -> task)
+
+
+    member this.Run () = 
+        let action = currTaskRef.Value.Fun (upcast this)
+        log (action.ToString ())
+        doAction action
+
+        if isRun then
+            this.Run ()
+        else
+            ()
+
+    interface IState with
+        member this.Task     = !currTaskRef
+        member this.SubTask  = currSubTask
+        member this.Response = currResponse
+        member this.Logger   = log
+
+        member this.GetTaskById taskid = 
+            tasks
+            |> Map.tryFind taskid
+            |> Option.map (!)
+
+        member this.GetNextTask () = 
+            getNextTask ()
