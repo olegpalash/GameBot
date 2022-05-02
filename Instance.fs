@@ -65,7 +65,7 @@ and IState =
     abstract Logger   : Logger
 
     abstract GetTaskById : TaskID -> Task option
-    abstract GetNextTask : unit   -> Task option
+    abstract GetNextTask : unit   -> (Task * DateTime) option
 
 type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task list) =
     let tasks =
@@ -189,7 +189,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
 
         tasks
         |> Map.fold folder None
-        |> Option.map (fun (task, _, _) -> task)
+        |> Option.map (fun (task, time, _) -> task, time)
 
 
     member this.Run () = 
