@@ -98,7 +98,7 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
     let handleInternalError str = 
         log $"An internal error occurred: {str}"
 
-        let response = client.Get defaultAddr
+        use response = client.Get defaultAddr
         currTaskRef  <- defaultTaskRef
         currSubTask  <- SubTaskID 0
         currResponse <- conv response
@@ -106,14 +106,14 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
     let doGet addr sub (delay : int)  = 
         Thread.Sleep delay
 
-        let response = client.Get addr
+        use response = client.Get addr
         currSubTask  <- sub
         currResponse <- conv response
 
     let doPost addr sub (delay : int)  data = 
         Thread.Sleep delay
 
-        let response = client.Post(addr, data)
+        use response = client.Post(addr, data)
         currSubTask  <- sub
         currResponse <- conv response
 

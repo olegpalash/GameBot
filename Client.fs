@@ -21,7 +21,7 @@ type Client(address: string) =
         |> Async.RunSynchronously
 
     member this.Post(path: string, data) = 
-        let formData = new FormUrlEncodedContent(data)
+        use formData = new FormUrlEncodedContent(data)
 
         client.PostAsync(path, formData)
         |> Async.AwaitTask
