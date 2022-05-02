@@ -31,29 +31,29 @@ let selectLinkByText text state =
     |> selectElements "a"
     |> findLinkByText text
 
-let followLink logger sub delay (node : HtmlNode) =
-    logger $"-> {node.InnerText()}"
+let followLink (state : IState) sub delay (node : HtmlNode) =
+    state.Logger $"-> {node.InnerText()}"
     
     let href = node.Attribute("href").Value()
     Get(href, sub, delay)
 
-let rec matchLinks state logger mapping = 
+let rec matchLinks state mapping = 
     let links = findAllLinks state
     match mapping with
     | (text, sub, delay) :: tail ->
         match (findLinkByText text links) with
         | Some node ->
-            followLink logger sub delay node
+            followLink state sub delay node
         | None ->
-            matchLinks state logger tail
+            matchLinks state tail
     | [] ->
         Error
 
-let matchLink state logger text sub delay = 
+let matchLink state text sub delay = 
     let links = findAllLinks state
     match (findLinkByText text links) with
     | Some node ->
-        followLink logger sub delay node
+        followLink state sub delay node
     | None ->
         Error
 

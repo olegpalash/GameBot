@@ -29,7 +29,7 @@ let tryLink text sub delay pstate =
         let link = selectLinkByText text pstate.State
         match link with
         | Some node ->
-            let action = followLink pstate.State.Logger sub delay node
+            let action = followLink pstate.State sub delay node
             {pstate with Action = Some action}
         | None ->
             pstate
@@ -53,7 +53,7 @@ let tryLinks sub delay texts pstate =
         let link = findAllLinks pstate.State |> findLink texts
         match link with
         | Some node ->
-            let action = followLink pstate.State.Logger sub delay node
+            let action = followLink pstate.State sub delay node
             { pstate with Action = Some action }
         | None ->
             pstate
