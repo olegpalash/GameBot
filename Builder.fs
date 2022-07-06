@@ -9,40 +9,49 @@ type Builder = {
     DefaultAddress: string
     InitTask:       TaskID option
     TasksList:      Task list
+    Config:         Config
 }
 
 let initBuilder = 
     {
-        Client = None
-        Logger = None
-        DefaultTask = None
+        Client         = None
+        Logger         = None
+        DefaultTask    = None
         DefaultAddress = "/"
-        InitTask = None
-        TasksList = []
+        InitTask       = None
+        TasksList      = []
+        Config         = Config.Empty
     }
 
-let setClient client builder = 
+let setClient client (builder : Builder) = 
     { builder with Client = Some client }
 
-let setLogger logger builder = 
+let setLogger logger (builder : Builder) = 
     { builder with Logger = Some logger }
 
-let setDefaultTask taskid builder = 
+let setDefaultTask taskid (builder : Builder) = 
     { builder with DefaultTask = Some taskid }
 
-let setDefaultAddress addr builder = 
+let setDefaultAddress addr (builder : Builder) = 
     { builder with DefaultAddress = addr }
 
-let setInitTask taskid builder = 
+let setInitTask taskid (builder : Builder) = 
     { builder with InitTask = Some taskid }
 
-let addTask task builder = 
+let setConfig config (builder : Builder) = 
+    { builder with Config = config } 
+
+let addTask task (builder : Builder) = 
     { builder with TasksList = task :: builder.TasksList }
 
 let buildInstance b = 
-    let client  = Option.get b.Client
-    let logger  = Option.get b.Logger
-    let dTaskId = Option.get b.DefaultTask
-    let iTaskId = Option.get b.InitTask
+    let settings = {
+        Client         = b.Client.Value
+        Logger         = b.Logger.Value
+        DefaultTaskId  = b.DefaultTask.Value
+        DefaultAddress = b.DefaultAddress
+        InitTaskId     = b.InitTask.Value
+        TasksList      = b.TasksList
+        Config         = b.Config }
 
-    Instance(client, logger, dTaskId, b.DefaultAddress, iTaskId, b.TasksList)
+    Instance(settings)

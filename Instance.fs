@@ -67,7 +67,25 @@ and IState =
     abstract GetTaskById : TaskID -> Task option
     abstract GetNextTask : unit   -> (Task * DateTime) option
 
-type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr: string, initTaskId: TaskID, tasksList: Task list) =
+type InstanceSettings = {
+    Client:         Client
+    Logger:         Logger
+    DefaultTaskId:  TaskID
+    DefaultAddress: string
+    InitTaskId:     TaskID
+    TasksList:      Task list
+    Config:         Config
+}
+
+type Instance(settings : InstanceSettings) =
+    let client        = settings.Client
+    let logger        = settings.Logger
+    let defaultTaskId = settings.DefaultTaskId
+    let defaultAddr   = settings.DefaultAddress
+    let initTaskId    = settings.InitTaskId
+    let tasksList     = settings.TasksList
+    let config        = settings.Config
+
     let tasks =
         tasksList
         |> List.map (fun t -> (t.Id, ref t))
