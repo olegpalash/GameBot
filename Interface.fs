@@ -37,6 +37,11 @@ let followLink (state : IState) sub delay (node : HtmlNode) =
     let href = node.Attribute("href").Value()
     Get(href, sub, delay)
 
+let followAddress (state : IState) sub delay (address : string) =
+    state.Logger $"-> {address}"
+    
+    Get(address, sub, delay)
+
 let rec matchLinks state mapping = 
     let links = findAllLinks state
     match mapping with
