@@ -49,6 +49,7 @@ type Response = {
 
 type Logger = string -> unit
 
+
 type Task = {
     Id:       TaskID
     Fun:      IState -> Action
@@ -67,6 +68,8 @@ and IState =
     abstract GetTaskById : TaskID -> Task option
     abstract GetNextTask : unit   -> (Task * DateTime) option
 
+type IMiddleware = IState -> Action option
+
 type InstanceSettings = {
     Client:         Client
     Logger:         Logger
@@ -75,6 +78,7 @@ type InstanceSettings = {
     InitTaskId:     TaskID
     TasksList:      Task list
     Config:         Config
+    Middleware:     IMiddleware
 }
 
 type Instance(settings : InstanceSettings) =
@@ -85,6 +89,7 @@ type Instance(settings : InstanceSettings) =
     let initTaskId    = settings.InitTaskId
     let tasksList     = settings.TasksList
     let config        = settings.Config
+    let middleware    = settings.Middleware
 
     let tasks =
         tasksList
@@ -253,9 +258,14 @@ type Instance(settings : InstanceSettings) =
         |> Option.map (fun (task, time, _) -> task, time)
 
     member this.Run () = 
-        let action = currTaskRef.Value.Fun (upcast this)
-        log (action.ToString ())
+        let action = 
+            match middleware (this :> IState) with
+            | Some act ->
+                act
+            | None ->
+                currTaskRef.Value.Fun (this :> IState)
 
+        log (action.ToString ())
         doAction action
 
         if isRun then
