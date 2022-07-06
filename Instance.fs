@@ -80,6 +80,14 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
     let mutable currResponse = None
     let mutable isRun = true
 
+    let maxRetry  = 2
+    let maxErrors = 3
+
+    let mutable lastGet : (string * SubTaskID) option = None
+    let mutable retryCount    = 0
+    let mutable lastErrorTask = TaskID ""
+    let mutable errorsCount   = 0
+
     let conv (response : HttpResponseMessage) = 
         let status = response.StatusCode
         let content = (response.Content.ReadAsStringAsync ()
@@ -126,37 +134,72 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
             handleInternalError $"Invalid task id: {taskid}"
 
     let handleError () = 
-        let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-        let path = $"errors/{now}.html"
+        let savePage () = 
+            let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
+            let path = $"errors/{now}.html"
 
-        match currResponse with
-        | Some response ->
-            File.WriteAllText (path, response.Content)
-            log $"An error occurred, page saved to {path}"
-        | None ->
-            log $"An error occurred, no response page"
+            match currResponse with
+            | Some response ->
+                File.WriteAllText (path, response.Content)
+                log $"Page saved to {path}"
+            | None ->
+                log $"No response page"
 
-        let response = client.Get defaultAddr
-        currTaskRef  <- defaultTaskRef
-        currSubTask  <- SubTaskID 0
-        currResponse <- conv response
+        log $"An error occurred"
+
+        let taskid = (!currTaskRef).Id
+
+        if errorsCount >= maxErrors then
+            savePage ()
+            currTaskRef := {!currTaskRef with Enabled = false}
+            log $"Task {taskid} disabled"
+            log $"Reseting..."
+            errorsCount <- 0
+            currTaskRef <- defaultTaskRef
+            doGet defaultAddr (SubTaskID 0) 1000
+
+        elif retryCount >= maxRetry || lastGet.IsNone then
+            savePage ()
+            if lastErrorTask = taskid then
+                errorsCount <- errorsCount + 1
+            else
+                lastErrorTask <- taskid
+                errorsCount   <- 1
+
+            log $"Reseting..."
+            currTaskRef <- defaultTaskRef
+            doGet defaultAddr (SubTaskID 0) 1000
+
+        else 
+            retryCount <- retryCount + 1
+            log $"Retrying..."
+
+            let (addr, sub) = lastGet.Value
+            doGet addr sub 1000
 
     let doAction action = 
         match action with
         | Get(addr, sub, delay) -> 
+            lastGet    <- Some(addr, sub)
+            retryCount <- 0
             doGet addr sub delay
         | Post(addr, sub, delay, data) ->
+            lastGet <- None
             doPost addr sub delay data
         | SetSubTask subtask ->
+            lastGet <- None
             currSubTask <- subtask
         | SetTask taskid ->
+            lastGet <- None
             doSetTask taskid
         | SetTime(time, taskid) ->
+            lastGet <- None
             currTaskRef := {!currTaskRef with Time = time}
             doSetTask taskid
         | Error ->
             handleError ()
         | Stop ->
+            lastGet <- None
             isRun <- false
 
     let getNextTask () = 
@@ -191,10 +234,10 @@ type Instance(client: Client, logger: Logger, defaultTaskId: TaskID, defaultAddr
         |> Map.fold folder None
         |> Option.map (fun (task, time, _) -> task, time)
 
-
     member this.Run () = 
         let action = currTaskRef.Value.Fun (upcast this)
         log (action.ToString ())
+
         doAction action
 
         if isRun then
