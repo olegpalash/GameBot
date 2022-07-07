@@ -1,5 +1,8 @@
 module GameBot.Interface
 
+open System
+open System.IO
+
 open FSharp.Data
 
 let selectElements (tag : string) (state : IState) = 
@@ -73,3 +76,11 @@ let getInnerText (state : IState) =
     |> Option.bind HtmlDocument.tryGetBody
     |> Option.map HtmlNode.innerText
     |> Option.defaultValue ""
+
+let saveReport (dir : string) (name : string) (state : IState) = 
+    Directory.CreateDirectory(dir) |> ignore
+
+    let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
+    let path = Path.Combine(dir, $"{now} {name}.txt")
+
+    File.WriteAllText(path, getInnerText state)
