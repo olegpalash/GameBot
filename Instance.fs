@@ -91,6 +91,8 @@ type Instance(settings : InstanceSettings) =
     let config        = settings.Config
     let middleware    = settings.Middleware
 
+    let debug = config.GetBool("core.debug", false)
+
     let tasks =
         tasksList
         |> List.map (fun t -> (t.Id, ref t))
@@ -265,7 +267,9 @@ type Instance(settings : InstanceSettings) =
             | None ->
                 currTaskRef.Value.Fun (this :> IState)
 
-        log (action.ToString ())
+        if debug then
+            log (action.ToString ())
+
         doAction action
 
         if isRun then
