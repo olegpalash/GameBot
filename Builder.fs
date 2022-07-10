@@ -11,6 +11,7 @@ type Builder = {
     TasksList:      Task list
     Config:         Config
     Middleware:     IMiddleware
+    Name:           string option
 }
 
 let initBuilder = 
@@ -23,6 +24,7 @@ let initBuilder =
         TasksList      = []
         Config         = Config.Empty
         Middleware     = (fun _ -> None)
+        Name           = None
     }
 
 let setClient client (builder : Builder) = 
@@ -46,6 +48,9 @@ let setConfig config (builder : Builder) =
 let setMiddleware middleware (builder : Builder) = 
     { builder with Middleware = middleware } 
 
+let setName name (builder : Builder) = 
+    { builder with Name = Some name }
+
 let addTask task (builder : Builder) = 
     { builder with TasksList = task :: builder.TasksList }
 
@@ -58,6 +63,7 @@ let buildInstance b =
         InitTaskId     = b.InitTask.Value
         TasksList      = b.TasksList
         Config         = b.Config
-        Middleware     = b.Middleware }
+        Middleware     = b.Middleware
+        Name           = b.Name.Value }
 
     Instance(settings)

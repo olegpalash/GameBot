@@ -77,10 +77,10 @@ let getInnerText (state : IState) =
     |> Option.map HtmlNode.innerText
     |> Option.defaultValue ""
 
-let saveReport (dir : string) (name : string) (state : IState) = 
+let saveReport (dir : string) (state : IState) = 
     Directory.CreateDirectory(dir) |> ignore
 
     let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-    let path = Path.Combine(dir, $"{now} {name}.txt")
+    let path = Path.Combine(dir, $"{now} {state.Name}.txt")
 
     File.WriteAllText(path, getInnerText state)

@@ -64,6 +64,7 @@ and IState =
     abstract SubTask  : SubTaskID
     abstract Response : Response option
     abstract Logger   : Logger
+    abstract Name     : string
 
     abstract GetTaskById : TaskID -> Task option
     abstract GetNextTask : unit   -> (Task * DateTime) option
@@ -71,6 +72,7 @@ and IState =
 type IMiddleware = IState -> Action option
 
 type InstanceSettings = {
+    Name:           string
     Client:         Client
     Logger:         Logger
     DefaultTaskId:  TaskID
@@ -90,6 +92,7 @@ type Instance(settings : InstanceSettings) =
     let tasksList     = settings.TasksList
     let config        = settings.Config
     let middleware    = settings.Middleware
+    let name          = settings.Name
 
     let debug = config.GetBool("core.debug", false)
 
@@ -161,7 +164,7 @@ type Instance(settings : InstanceSettings) =
     let handleError () = 
         let savePage () = 
             let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-            let path = $"errors/{now}.html"
+            let path = $"errors/{now} {name}.html"
 
             match currResponse with
             | Some response ->
@@ -282,6 +285,7 @@ type Instance(settings : InstanceSettings) =
         member this.SubTask  = currSubTask
         member this.Response = currResponse
         member this.Logger   = log
+        member this.Name     = name
 
         member this.GetTaskById taskid = 
             tasks
