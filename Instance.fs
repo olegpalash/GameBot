@@ -198,11 +198,12 @@ type Instance(settings : InstanceSettings) =
             currTaskRef <- defaultTaskRef
             doGet defaultAddr (SubTaskID 0) 1000
 
-        else 
+        else
             retryCount <- retryCount + 1
-            log $"Retrying..."
 
             let (addr, sub) = lastGet.Value
+
+            log $"Retrying to get '{addr}'..."
             doGet addr sub 1000
 
     let doAction action = 
