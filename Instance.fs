@@ -134,24 +134,45 @@ type Instance(settings : InstanceSettings) =
     let handleInternalError str = 
         log $"An internal error occurred: {str}"
 
-        use response = client.Get defaultAddr
+        let response =
+            try
+                use message = client.Get defaultAddr
+                conv message
+            with 
+            | e -> 
+                None
+
         currTaskRef  <- defaultTaskRef
         currSubTask  <- SubTaskID 0
-        currResponse <- conv response
+        currResponse <- response
 
     let doGet addr sub (delay : int)  = 
         Thread.Sleep delay
 
-        use response = client.Get addr
+        let response =
+            try
+                use message = client.Get defaultAddr
+                conv message
+            with 
+            | e -> 
+                None
+
         currSubTask  <- sub
-        currResponse <- conv response
+        currResponse <- response
 
     let doPost addr sub (delay : int)  data = 
         Thread.Sleep delay
 
-        use response = client.Post(addr, data)
+        let response =
+            try
+                use message = client.Post(addr, data)
+                conv message
+            with 
+            | e -> 
+                None
+
         currSubTask  <- sub
-        currResponse <- conv response
+        currResponse <- response
 
     let doSetTask taskid = 
         match Map.tryFind taskid tasks with
