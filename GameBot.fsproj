@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>GameBot</PackageId>
-    <Version>0.5.1</Version>
+    <Version>0.8.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
