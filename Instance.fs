@@ -265,11 +265,16 @@ type Instance(settings : InstanceSettings) =
 
     member this.Run () = 
         let action = 
-            match middleware (this :> IState) with
-            | Some act ->
-                act
-            | None ->
-                currTaskRef.Value.Fun (this :> IState)
+            try 
+                match middleware (this :> IState) with
+                | Some act ->
+                    act
+                | None ->
+                    currTaskRef.Value.Fun (this :> IState)
+            with
+            | e -> 
+                log (e.ToString())
+                Error
 
         if debug then
             log (action.ToString ())
