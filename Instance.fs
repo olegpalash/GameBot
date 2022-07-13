@@ -151,7 +151,7 @@ type Instance(settings : InstanceSettings) =
 
         let response =
             try
-                use message = client.Get defaultAddr
+                use message = client.Get addr
                 conv message
             with 
             | e -> 
