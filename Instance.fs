@@ -49,7 +49,6 @@ type Response = {
 
 type Logger = string -> unit
 
-
 type Task = {
     Id:       TaskID
     Fun:      IState -> Action
@@ -95,6 +94,9 @@ type Instance(settings : InstanceSettings) =
     let name          = settings.Name
 
     let debug = config.GetBool("core.debug", false)
+
+    let errorsDir = config.Get("core.errorsDir", "errors")
+    do Directory.CreateDirectory(errorsDir) |> ignore
 
     let tasks =
         tasksList
@@ -185,7 +187,7 @@ type Instance(settings : InstanceSettings) =
     let handleError () = 
         let savePage () = 
             let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-            let path = $"errors/{now} {name}.html"
+            let path = $"{errorsDir}/{now} {name}.html"
 
             match currResponse with
             | Some response ->
