@@ -64,6 +64,7 @@ and IState =
     abstract Response : Response option
     abstract Logger   : Logger
     abstract Name     : string
+    abstract Config   : Config
 
     abstract GetTaskById : TaskID -> Task option
     abstract GetNextTask : unit   -> (Task * DateTime) option
@@ -315,6 +316,7 @@ type Instance(settings : InstanceSettings) =
         member this.Response = currResponse
         member this.Logger   = log
         member this.Name     = name
+        member this.Config   = config
 
         member this.GetTaskById taskid = 
             tasks

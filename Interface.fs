@@ -77,7 +77,8 @@ let getInnerText (state : IState) =
     |> Option.map HtmlNode.innerText
     |> Option.defaultValue ""
 
-let saveReport (dir : string) (state : IState) = 
+let saveReport (state : IState) = 
+    let dir = state.Config.Get("core.reportsDir", "reports")
     Directory.CreateDirectory(dir) |> ignore
 
     let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
