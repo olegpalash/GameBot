@@ -84,4 +84,6 @@ let saveReport (state : IState) =
     let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
     let path = Path.Combine(dir, $"{now} {state.Name}.txt")
 
+    state.Logger $"Report saved to {path}"
+
     File.WriteAllText(path, getInnerText state)
