@@ -77,8 +77,13 @@ let getInnerText (state : IState) =
     |> Option.map HtmlNode.innerText
     |> Option.defaultValue ""
 
+let private botRoot = 
+    Environment.GetEnvironmentVariable("BOT_ROOT_DIR")
+    |> Option.ofObj
+    |> Option.defaultValue ""
+
 let saveReport (state : IState) = 
-    let dir = state.Config.Get("core.reportsDir", "reports")
+    let dir = Path.Combine(botRoot, "reports")
     Directory.CreateDirectory(dir) |> ignore
 
     let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")

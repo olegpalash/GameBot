@@ -96,7 +96,12 @@ type Instance(settings : InstanceSettings) =
 
     let debug = config.GetBool("core.debug", false)
 
-    let errorsDir = config.Get("core.errorsDir", "errors")
+    let botRoot = 
+        Environment.GetEnvironmentVariable("BOT_ROOT_DIR")
+        |> Option.ofObj
+        |> Option.defaultValue ""
+
+    let errorsDir = Path.Combine(botRoot, "errors")
     do Directory.CreateDirectory(errorsDir) |> ignore
 
     let tasks =
