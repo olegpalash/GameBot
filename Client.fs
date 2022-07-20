@@ -26,3 +26,8 @@ type Client(address: string) =
         client.PostAsync(path, formData)
         |> Async.AwaitTask
         |> Async.RunSynchronously
+
+    member this.BaseAddress
+        with set(newAddr : string) = 
+            let newUri = new Uri(newAddr)
+            do client.BaseAddress <- newUri
