@@ -23,8 +23,8 @@ type SubTaskID =
         | SubTaskID value -> value.ToString ()
 
 type Action = 
-    | Get        of address : string * sub :  SubTaskID * delay : int
-    | Post       of address : string * sub :  SubTaskID * delay : int * data : Map<string, string>
+    | Get        of address : string * sub : SubTaskID * delay : TimeSpan
+    | Post       of address : string * sub : SubTaskID * delay : TimeSpan * data : Map<string, string>
     | SetSubTask of SubTaskID
     | SetTask    of TaskID
     | SetTime    of DateTime option * TaskID
@@ -154,7 +154,7 @@ type Instance(settings : InstanceSettings) =
         currSubTask  <- SubTaskID 0
         currResponse <- response
 
-    let doGet addr sub (delay : int)  = 
+    let doGet addr sub (delay : TimeSpan)  = 
         Thread.Sleep delay
 
         let response =
@@ -168,7 +168,7 @@ type Instance(settings : InstanceSettings) =
         currSubTask  <- sub
         currResponse <- response
 
-    let doPost addr sub (delay : int)  data = 
+    let doPost addr sub (delay : TimeSpan)  data = 
         Thread.Sleep delay
 
         let response =
@@ -213,7 +213,7 @@ type Instance(settings : InstanceSettings) =
             log $"Reseting..."
             errorsCount <- 0
             currTaskRef <- defaultTaskRef
-            doGet defaultAddr (SubTaskID 0) 1000
+            doGet defaultAddr (SubTaskID 0) (TimeSpan.FromSeconds(1.0))
 
         elif retryCount >= maxRetry || lastGet.IsNone then
             savePage ()
@@ -225,7 +225,7 @@ type Instance(settings : InstanceSettings) =
 
             log $"Reseting..."
             currTaskRef <- defaultTaskRef
-            doGet defaultAddr (SubTaskID 0) 1000
+            doGet defaultAddr (SubTaskID 0) (TimeSpan.FromSeconds(1.0))
 
         else
             retryCount <- retryCount + 1
@@ -233,7 +233,7 @@ type Instance(settings : InstanceSettings) =
             let (addr, sub) = lastGet.Value
 
             log $"Retrying to get '{addr}'..."
-            doGet addr sub 1000
+            doGet addr sub (TimeSpan.FromSeconds(1.0))
 
     let doAction action = 
         match action with
