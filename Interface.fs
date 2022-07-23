@@ -87,7 +87,7 @@ let saveReport (state : IState) =
     Directory.CreateDirectory(dir) |> ignore
 
     let now = DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-    let path = Path.Combine(dir, $"{now} {state.Name}.txt")
+    let path = Path.Combine(dir, $"{now} {state.Task.Id} {state.Name}.txt")
 
     state.Logger $"Report saved to {path}"
 
