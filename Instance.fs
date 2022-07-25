@@ -203,11 +203,11 @@ type Instance(settings : InstanceSettings) =
                 log $"No response page"
 
         log $"An error occurred"
+        savePage ()
 
         let taskid = (!currTaskRef).Id
 
         if errorsCount >= maxErrors then
-            savePage ()
             currTaskRef := {!currTaskRef with Enabled = false}
             log $"Task {taskid} disabled"
             log $"Reseting..."
@@ -216,7 +216,6 @@ type Instance(settings : InstanceSettings) =
             doGet defaultAddr (SubTaskID 0) (TimeSpan.FromSeconds(1.0))
 
         elif retryCount >= maxRetry || lastGet.IsNone then
-            savePage ()
             if lastErrorTask = taskid then
                 errorsCount <- errorsCount + 1
             else
