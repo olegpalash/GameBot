@@ -197,7 +197,8 @@ type Instance(settings : InstanceSettings) =
 
             match currResponse with
             | Some response ->
-                File.WriteAllText (path, response.Content)
+                File.WriteAllText(path, response.Content)
+                log $"Status = {response.Status}"
                 log $"Page saved to {path}"
             | None ->
                 log $"No response page"
