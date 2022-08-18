@@ -30,7 +30,7 @@ type Config(map : Map<string, string>) =
         this.TryGetBool(key)
         |> Option.defaultValue def
 
-    member this.TryGetFloat(key : string): float option = tryGetParsed Double.Parse key
+    member this.TryGetFloat(key : string): float option = tryGetParsed float key
 
     member this.GetFloat(key : string, def : float): float = 
         this.TryGetFloat(key)
